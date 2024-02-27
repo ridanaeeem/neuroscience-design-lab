@@ -1,4 +1,5 @@
 typedef enum{
+  programSetup,
   prompt,
   begin,
   validLeft,
@@ -42,12 +43,14 @@ unsigned long trialEnded = 0;
 unsigned long betweenTrials = 3000;
 
 // trial specifications
-int nTrials = 5;
+int nTrials = 10;
 int trialCount = 0;
+// probability out of 100 that the cue should be valid
+float probValid = 50;
 
 // deciding what types to do
 // left (0) vs right (1)
-int cues[5] = {0,1,2,3,1};
+int cues[10] = {};
 int cueIndex = 0;
 int cueNumber = 0;
 
@@ -56,7 +59,8 @@ int cueNumber = 0;
 // int typeIndex = 0;
 // int typeNumber = 0;
 
-
+// results
+unsigned long reactionTimes[5];
 
 void setup() {
   Serial.begin(9600);
@@ -65,7 +69,7 @@ void setup() {
   pinMode(ledLeftCue, OUTPUT);
   pinMode(ledRightCue, OUTPUT);
 
-  programState = begin;
+  programState = programSetup;
   randomSeed(analogRead(0));
 }
 
@@ -76,6 +80,33 @@ void loop() {
     rightButtonState = digitalRead(rightButton);
 
     switch(programState){
+      case programSetup:
+        Serial.println("setup");
+        for (int i=0; i < nTrials; i++){
+        float rand = random(0,100);
+        // invalid cue
+        if (rand <= (100 - probValid)){
+          // 50-50 chance for left or right
+          if (rand <= ((100 - probValid)/2)){
+            cueNumber = 2;
+          } else {
+            cueNumber = 3;
+          }
+        // valid cue
+        } else {
+          // 50-50 chance for left or right
+          if (rand >= probValid && rand <= (probValid + (probValid/2))){
+            cueNumber = 0;
+          } else {
+            cueNumber = 1;
+          }
+        }
+        cues[i] = cueNumber;
+        Serial.println(cueNumber);
+      }
+      programState = begin;
+      break;
+
       case prompt:
         // make sure everything is off in case coming from cheating
         digitalWrite(ledLeftCue, LOW);
@@ -210,16 +241,13 @@ void loop() {
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           Serial.println(reactionTime);
-          // print the reaction time in milliseconds
-          // Serial.println(reactionTime);
           // add to array
-          // reactionTimes[trialCount] = reactionTime;
-          // trialCount++;
-          // if (trialCount == nTrials) displayResults();
+          reactionTimes[trialCount] = reactionTime;
+          trialCount++;
+          if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
           programState = begin;
-          trialCount++;
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (rightButtonState == 1){
@@ -228,6 +256,7 @@ void loop() {
           Serial.println("wrong");
           trialEnded = currentMillis;
           programState = begin;
+          reactionTimes[trialCount] = reactionTime;
           trialCount++;
         }
       break;
@@ -248,9 +277,13 @@ void loop() {
           // turn the light off
           digitalWrite(rightStimulus, LOW);
           Serial.println(reactionTime);
+          // add to array
+          reactionTimes[trialCount] = reactionTime;
+          trialCount++;
+          if (trialCount == nTrials) displayResults();
+          // go back to beginning
           trialEnded = currentMillis;
           programState = begin;
-          trialCount++;
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (leftButtonState == 1){
@@ -259,6 +292,7 @@ void loop() {
           Serial.println("wrong");
           trialEnded = currentMillis;
           programState = begin;
+          reactionTimes[trialCount] = reactionTime;
           trialCount++;
         }
       break;
@@ -267,4 +301,18 @@ void loop() {
         Serial.println("Uh oh, let the experimenter know something bad happened");
       }
   }
+}
+
+// returns nothing, takes in nothing
+void displayResults(void){
+  float meanReactionTime = 0;
+  Serial.print("All reaction times: ");
+  for (int i=0; i < nTrials; i++){
+    Serial.print(reactionTimes[i]);
+    Serial.print(" ");
+    meanReactionTime += (reactionTimes[i] / nTrials);
+  }
+  Serial.print("\nAverage reaction time: ");
+  Serial.print(meanReactionTime);
+  Serial.print("\n");
 }
