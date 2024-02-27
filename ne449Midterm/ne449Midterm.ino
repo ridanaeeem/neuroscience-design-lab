@@ -42,15 +42,20 @@ unsigned long trialEnded = 0;
 // how long between trials
 unsigned long betweenTrials = 3000;
 
-// trial specifications
+// trial specifications - make sure valid + invalid = nTrials
 int nTrials = 10;
+int numValid = 5;
+int numInvalid = 5;
 int trialCount = 0;
+
+
 // probability out of 100 that the cue should be valid
 float probValid = 50;
 
+int numValid = 5;
+int numInvalid = 5;
+
 // deciding what types to do
-// left (0) vs right (1)
-int cues[10] = {};
 int cueIndex = 0;
 int cueNumber = 0;
 
@@ -81,29 +86,55 @@ void loop() {
 
     switch(programState){
       case programSetup:
-        Serial.println("setup");
+        Serial.println("before");
+        int cues[nTrials] = {};
+
         for (int i=0; i < nTrials; i++){
-        float rand = random(0,100);
-        // invalid cue
-        if (rand <= (100 - probValid)){
-          // 50-50 chance for left or right
-          if (rand <= ((100 - probValid)/2)){
-            cueNumber = 2;
-          } else {
-            cueNumber = 3;
+          if (numValid != 0){
+            float rand = random(0,100);
+            if (rand <= 50) cues[i] = 0;
+            else cues[i] = 1;
+            numValid --;
+          } else if (numInvalid != 0){
+            float rand = random(0,100);
+            if (rand <= 50) cues[i] = 2;
+            else cues[i] = 3;
+            numInvalid --;
           }
-        // valid cue
-        } else {
-          // 50-50 chance for left or right
-          if (rand >= probValid && rand <= (probValid + (probValid/2))){
-            cueNumber = 0;
-          } else {
-            cueNumber = 1;
-          }
+          Serial.println(cues[i]);
         }
-        cues[i] = cueNumber;
-        Serial.println(cueNumber);
-      }
+
+        randomizeArray(cues, nTrials);
+
+        Serial.println("after");
+        for (int i=0; i < nTrials; i++){
+          Serial.println(cues[i]);
+        }
+
+
+      // probability based randomization code
+      //   for (int i=0; i < nTrials; i++){
+      //   float rand = random(0,100);
+      //   // invalid cue
+      //   if (rand <= (100 - probValid)){
+      //     // 50-50 chance for left or right
+      //     if (rand <= ((100 - probValid)/2)){
+      //       cueNumber = 2;
+      //     } else {
+      //       cueNumber = 3;
+      //     }
+      //   // valid cue
+      //   } else {
+      //     // 50-50 chance for left or right
+      //     if (rand >= probValid && rand <= (probValid + (probValid/2))){
+      //       cueNumber = 0;
+      //     } else {
+      //       cueNumber = 1;
+      //     }
+      //   }
+      //   cues[i] = cueNumber;
+      //   Serial.println(cueNumber);
+      // }
       programState = begin;
       break;
 
@@ -315,4 +346,15 @@ void displayResults(void){
   Serial.print("\nAverage reaction time: ");
   Serial.print(meanReactionTime);
   Serial.print("\n");
+}
+
+// via chatgpt
+void randomizeArray(int arr[], int size) {
+  for (int i = size - 1; i > 0; i--) {
+    int j = random(0, i + 1); // Generate a random index between 0 and i
+    // Swap arr[i] with the element at the random index
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
 }
