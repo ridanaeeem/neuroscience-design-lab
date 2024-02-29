@@ -47,13 +47,10 @@ int nTrials = 10;
 int numValid = 5;
 int numInvalid = 5;
 int trialCount = 0;
-
+int cues[10] = {};
 
 // probability out of 100 that the cue should be valid
 float probValid = 50;
-
-int numValid = 5;
-int numInvalid = 5;
 
 // deciding what types to do
 int cueIndex = 0;
@@ -76,6 +73,8 @@ void setup() {
 
   programState = programSetup;
   randomSeed(analogRead(0));
+
+  Serial.println("Press the button when you're ready to begin");
 }
 
 void loop() {
@@ -86,9 +85,7 @@ void loop() {
 
     switch(programState){
       case programSetup:
-        Serial.println("before");
-        int cues[nTrials] = {};
-
+        // Serial.println("before");
         for (int i=0; i < nTrials; i++){
           if (numValid != 0){
             float rand = random(0,100);
@@ -101,41 +98,43 @@ void loop() {
             else cues[i] = 3;
             numInvalid --;
           }
-          Serial.println(cues[i]);
+          // Serial.println(cues[i]);
         }
 
         randomizeArray(cues, nTrials);
 
-        Serial.println("after");
-        for (int i=0; i < nTrials; i++){
-          Serial.println(cues[i]);
+        // Serial.println("after randomization");
+        // for (int i=0; i < nTrials; i++){
+        //   Serial.println(cues[i]);
+        // }
+
+        if (leftButtonState == 1 || rightButtonState == 1){
+          programState = prompt;
         }
 
-
-      // probability based randomization code
-      //   for (int i=0; i < nTrials; i++){
-      //   float rand = random(0,100);
-      //   // invalid cue
-      //   if (rand <= (100 - probValid)){
-      //     // 50-50 chance for left or right
-      //     if (rand <= ((100 - probValid)/2)){
-      //       cueNumber = 2;
-      //     } else {
-      //       cueNumber = 3;
-      //     }
-      //   // valid cue
-      //   } else {
-      //     // 50-50 chance for left or right
-      //     if (rand >= probValid && rand <= (probValid + (probValid/2))){
-      //       cueNumber = 0;
-      //     } else {
-      //       cueNumber = 1;
-      //     }
-      //   }
-      //   cues[i] = cueNumber;
-      //   Serial.println(cueNumber);
-      // }
-      programState = begin;
+        // probability based randomization code
+        //   for (int i=0; i < nTrials; i++){
+        //   float rand = random(0,100);
+        //   // invalid cue
+        //   if (rand <= (100 - probValid)){
+        //     // 50-50 chance for left or right
+        //     if (rand <= ((100 - probValid)/2)){
+        //       cueNumber = 2;
+        //     } else {
+        //       cueNumber = 3;
+        //     }
+        //   // valid cue
+        //   } else {
+        //     // 50-50 chance for left or right
+        //     if (rand >= probValid && rand <= (probValid + (probValid/2))){
+        //       cueNumber = 0;
+        //     } else {
+        //       cueNumber = 1;
+        //     }
+        //   }
+        //   cues[i] = cueNumber;
+        //   Serial.println(cueNumber);
+        // }
       break;
 
       case prompt:
@@ -144,7 +143,6 @@ void loop() {
         digitalWrite(ledRightCue, LOW);
         if (leftButtonState == 0 && rightButtonState == 0){
           // message for starting the experiment
-          Serial.println("Press the button when you're ready to begin");
           trialEnded = currentMillis;
           programState = begin;
         }
@@ -259,11 +257,11 @@ void loop() {
 
       case waitLeftPress:
         if (millis() - lightOn >= 5000){
-            Serial.println("You took too long, try again!");
+            Serial.println("You took too long. Press the button when you're ready to try again");
             // turn light off and set lightOn to zero so this loop doesn't repeat
             digitalWrite(leftStimulus, LOW);
             lightOn = 0;
-            programState = begin;
+            programState = prompt;
           }
         // reacted within an appropriate amount of time and pressed the right button
         if (leftButtonState == 1){
@@ -294,12 +292,12 @@ void loop() {
 
       case waitRightPress:
         if (millis() - lightOn >= 5000){
-          Serial.println("You took too long, try again!");
+          Serial.println("You took too long. Press the button when you're ready to try again");
           // turn light off and set lightOn to zero so this loop doesn't repeat
           digitalWrite(rightStimulus, LOW);
           lightOn = 0;
           trialEnded = currentMillis;
-          programState = begin;
+          programState = prompt;
         }
         // reacted within an appropriate amount of time and pressed the right button
         if (rightButtonState == 1){
