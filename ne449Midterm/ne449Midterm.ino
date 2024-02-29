@@ -50,7 +50,7 @@ int numInvalid = 5;
 int trialCount = -1;
 // states what the cues should be (valid, invalid)
 int cues[10] = {};
-// states what the cues should be (endogenous, exogenous)
+// states what the cues should be (endogenous 0, exogenous 1)
 int endoExo[10] = {};
 // whether or not they responded correctly
 bool correctness[10] = {};
@@ -64,11 +64,6 @@ float probValid = 50;
 int cueIndex = 0;
 int cueNumber = 0;
 
-// endogenous (0) vs exogenous (1)
-// int types[5] = {0,1,0,1,1};
-// int typeIndex = 0;
-// int typeNumber = 0;
-
 void setup() {
   Serial.begin(9600);
   pinMode(leftStimulus, OUTPUT);
@@ -78,8 +73,13 @@ void setup() {
 
   programState = programSetup;
   randomSeed(analogRead(0));
-
-  Serial.println("Press the button when you're ready to begin");
+  Serial.println(" ");
+  Serial.println("In this experiment a light will flash and then an LED will turn on.");
+  Serial.println("Once this LED turns on after the flash, click the button corresponding to that LED.");
+  Serial.println("(Left button for left LED, right button for right LED)");
+  Serial.println("Don't click the button until the LED turns on after the flash.");
+  Serial.println("Press the button when you're ready to begin the experiment.");
+  Serial.println(" ");
 }
 
 void loop() {
@@ -90,58 +90,61 @@ void loop() {
 
     switch(programState){
       case programSetup:
-        // Serial.println("before");
-        for (int i=0; i < nTrials; i++){
-          if (numValid != 0){
-            float rand = random(0,100);
-            if (rand <= 50) cues[i] = 0;
-            else cues[i] = 1;
-            numValid --;
-          } else if (numInvalid != 0){
-            float rand = random(0,100);
-            if (rand <= 50) cues[i] = 2;
-            else cues[i] = 3;
-            numInvalid --;
-          }
-          //0 is endo 1 is exo
-          endoExo[i] = random(2);
-        }
 
-        randomizeArray(cues, nTrials);
+        // swapping based randomization code, w requirements for valid vs invalid
+        // Serial.println("before");
+        // for (int i=0; i < nTrials; i++){
+        //   if (numValid != 0){
+        //     float rand = random(0,100);
+        //     if (rand <= 50) cues[i] = 0;
+        //     else cues[i] = 1;
+        //     numValid --;
+        //   } else if (numInvalid != 0){
+        //     float rand = random(0,100);
+        //     if (rand <= 50) cues[i] = 2;
+        //     else cues[i] = 3;
+        //     numInvalid --;
+        //   }
+        //   //0 is endo 1 is exo
+        //   endoExo[i] = random(2);
+        // }
+
+        // randomizeArray(cues, nTrials);
 
         // Serial.println("after randomization");
         // for (int i=0; i < nTrials; i++){
         //   Serial.println(cues[i]);
         // }
 
+        // probability based randomization code, w probability of valid vs invalid
+        // 50-50 chance for left or right
+          for (int i=0; i < nTrials; i++){
+          float rand = random(0,100);
+          // invalid cue
+          if (rand <= (100 - probValid)){
+            if (rand <= ((100 - probValid)/2)){
+              cueNumber = 2; //invalidLeft
+            } else {
+              cueNumber = 3; //invalidRight
+            }
+          // valid cue
+          } else {
+            if (rand >= probValid && rand <= (probValid + (probValid/2))){
+              cueNumber = 0; //validLeft
+            } else {
+              cueNumber = 1; //validRight
+            }
+          }
+          cues[i] = cueNumber;
 
+          // 0 is endo 1 is exo
+          endoExo[i] = random(2);
+        }
+        
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
         }
 
-        // probability based randomization code
-        //   for (int i=0; i < nTrials; i++){
-        //   float rand = random(0,100);
-        //   // invalid cue
-        //   if (rand <= (100 - probValid)){
-        //     // 50-50 chance for left or right
-        //     if (rand <= ((100 - probValid)/2)){
-        //       cueNumber = 2;
-        //     } else {
-        //       cueNumber = 3;
-        //     }
-        //   // valid cue
-        //   } else {
-        //     // 50-50 chance for left or right
-        //     if (rand >= probValid && rand <= (probValid + (probValid/2))){
-        //       cueNumber = 0;
-        //     } else {
-        //       cueNumber = 1;
-        //     }
-        //   }
-        //   cues[i] = cueNumber;
-        //   Serial.println(cueNumber);
-        // }
       break;
 
       case prompt:
