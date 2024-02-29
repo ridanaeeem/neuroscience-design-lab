@@ -36,7 +36,7 @@ unsigned long stimulusDelay;
 // what time the cue started (when begin ends)
 unsigned long cueTurnOn = 0;
 // how long the cue stays on
-unsigned long cueLength = 500;
+unsigned long cueLength = 100;
 // when did the last trial end
 unsigned long trialEnded = 0;
 // how long between trials
@@ -46,9 +46,16 @@ unsigned long betweenTrials = 3000;
 int nTrials = 10;
 int numValid = 5;
 int numInvalid = 5;
+// for indexing the following arrays
 int trialCount = -1;
+// states what the cues should be (valid, invalid)
 int cues[10] = {};
+// states what the cues should be (endogenous, exogenous)
+int endoExo[10] = {};
+// whether or not they responded correctly
 bool correctness[10] = {};
+// results
+unsigned long reactionTimes[10];
 
 // probability out of 100 that the cue should be valid
 float probValid = 50;
@@ -61,9 +68,6 @@ int cueNumber = 0;
 // int types[5] = {0,1,0,1,1};
 // int typeIndex = 0;
 // int typeNumber = 0;
-
-// results
-unsigned long reactionTimes[10];
 
 void setup() {
   Serial.begin(9600);
@@ -99,7 +103,8 @@ void loop() {
             else cues[i] = 3;
             numInvalid --;
           }
-          // Serial.println(cues[i]);
+          //0 is endo 1 is exo
+          endoExo[i] = random(2);
         }
 
         randomizeArray(cues, nTrials);
@@ -108,6 +113,7 @@ void loop() {
         // for (int i=0; i < nTrials; i++){
         //   Serial.println(cues[i]);
         // }
+
 
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
@@ -158,6 +164,7 @@ void loop() {
             cueTurnOn = currentMillis;
             cueNumber = cues[cueIndex];
             cueIndex++;
+
             if (cueNumber == 0) programState = validLeft;
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
@@ -173,20 +180,34 @@ void loop() {
           programState = prompt;
         }
 
-        // endogenous cue
-        if (currentMillis - cueTurnOn <= cueLength){
-          digitalWrite(ledLeftCue, HIGH);
+        if (endoExo[cueIndex] == 0){
+          // endogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
+            digitalWrite(ledLeftCue, HIGH);
+          } else {
+            digitalWrite(ledLeftCue, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(leftStimulus, HIGH);
+              lightOn = millis();
+              programState = waitLeftPress;
+            }
+          }
         } else {
-          digitalWrite(ledLeftCue, LOW);
-          if (currentMillis - previousMillis >= stimulusDelay) {
-            previousMillis = currentMillis;
+          // exogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(leftStimulus, HIGH);
-            lightOn = millis();
-            programState = waitLeftPress;
+          } else {
+            digitalWrite(leftStimulus, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(leftStimulus, HIGH);
+              lightOn = millis();
+              programState = waitLeftPress;
+            }
           }
         }
-        // exogenous cue
-        
+     
       break;
 
       // right cue --> right stimulus
@@ -196,20 +217,33 @@ void loop() {
           programState = prompt;
         }
 
-        // endogenous cue
-        if (currentMillis - cueTurnOn <= cueLength){
-          digitalWrite(ledRightCue, HIGH);
+        if (endoExo[cueIndex] == 0){
+          // endogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
+            digitalWrite(ledRightCue, HIGH);
+          } else {
+            digitalWrite(ledRightCue, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(rightStimulus, HIGH);
+              lightOn = millis();
+              programState = waitRightPress;
+            }
+          }
         } else {
-          digitalWrite(ledRightCue, LOW);
-          if (currentMillis - previousMillis >= stimulusDelay) {
-            previousMillis = currentMillis;
+          // exogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(rightStimulus, HIGH);
-            lightOn = millis();
-            programState = waitRightPress;
+          } else {
+            digitalWrite(rightStimulus, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(rightStimulus, HIGH);
+              lightOn = millis();
+              programState = waitRightPress;
+            }
           }
         }
-        // exogenous cue
-
       break;
 
       // right cue --> left stimulus
@@ -219,19 +253,33 @@ void loop() {
           programState = prompt;
         }
 
-        // endogenous cue
-        if (currentMillis - cueTurnOn <= cueLength){
-          digitalWrite(ledRightCue, HIGH);
+        if (endoExo[cueIndex] == 0){
+          // endogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
+            digitalWrite(ledRightCue, HIGH);
+          } else {
+            digitalWrite(ledRightCue, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(leftStimulus, HIGH);
+              lightOn = millis();
+              programState = waitLeftPress;
+            }
+          }
         } else {
-          digitalWrite(ledRightCue, LOW);
-          if (currentMillis - previousMillis >= stimulusDelay) {
-            previousMillis = currentMillis;
-            digitalWrite(leftStimulus, HIGH);
-            lightOn = millis();
-            programState = waitLeftPress;
+          // exogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
+            digitalWrite(rightStimulus, HIGH);
+          } else {
+            digitalWrite(rightStimulus, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(leftStimulus, HIGH);
+              lightOn = millis();
+              programState = waitLeftPress;
+            }
           }
         }
-        // exogenous cue
       break;
 
       // left cue --> right stimulus
@@ -241,19 +289,33 @@ void loop() {
           programState = prompt;
         }
 
-        // endogenous cue
-        if (currentMillis - cueTurnOn <= cueLength){
-          digitalWrite(ledLeftCue, HIGH);
+        if (endoExo[cueIndex] == 0){
+          // endogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
+            digitalWrite(ledLeftCue, HIGH);
+          } else {
+            digitalWrite(ledLeftCue, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(rightStimulus, HIGH);
+              lightOn = millis();
+              programState = waitRightPress;
+            }
+          }
         } else {
-          digitalWrite(ledLeftCue, LOW);
-          if (currentMillis - previousMillis >= stimulusDelay) {
-            previousMillis = currentMillis;
-            digitalWrite(rightStimulus, HIGH);
-            lightOn = millis();
-            programState = waitRightPress;
+          // exogenous cue
+          if (currentMillis - cueTurnOn <= cueLength){
+            digitalWrite(leftStimulus, HIGH);
+          } else {
+            digitalWrite(leftStimulus, LOW);
+            if (currentMillis - previousMillis >= stimulusDelay) {
+              previousMillis = currentMillis;
+              digitalWrite(rightStimulus, HIGH);
+              lightOn = millis();
+              programState = waitRightPress;
+            }
           }
         }
-        // exogenous cue
       break;
 
       case waitLeftPress:
@@ -270,7 +332,6 @@ void loop() {
           reactionTime = millis() - lightOn;
           // turn the light off
           digitalWrite(leftStimulus, LOW);
-          Serial.println(reactionTime);
           // add to array
           trialCount++;
           reactionTimes[trialCount] = reactionTime;
@@ -286,7 +347,6 @@ void loop() {
           reactionTime = millis() - lightOn;
           // turn the light off
           digitalWrite(leftStimulus, LOW);
-          Serial.println(reactionTime);
           // add to array
           trialCount++;
           reactionTimes[trialCount] = reactionTime;
@@ -313,7 +373,6 @@ void loop() {
           reactionTime = millis() - lightOn;
           // turn the light off
           digitalWrite(rightStimulus, LOW);
-          Serial.println(reactionTime);
           // add to array
           trialCount++;
           reactionTimes[trialCount] = reactionTime;
@@ -329,7 +388,6 @@ void loop() {
           reactionTime = millis() - lightOn;
           // turn the light off
           digitalWrite(rightStimulus, LOW);
-          Serial.println(reactionTime);
           // add to array
           trialCount++;
           reactionTimes[trialCount] = reactionTime;
@@ -351,11 +409,16 @@ void loop() {
 void displayResults(void){
   float meanReactionTime = 0;
   Serial.print("All reaction times: ");
+  Serial.println(" ");
   for (int i=0; i < nTrials; i++){
     Serial.print(reactionTimes[i]);
-    Serial.print(" ");
-    Serial.println(correctness[i]);
-    Serial.print(" ");
+    Serial.print(" correct? ");
+    Serial.print(correctness[i]);
+    Serial.print(" cue? ");
+    Serial.print(cues[i]);
+    Serial.print(" endoExo? ");
+    Serial.print(endoExo[i]);
+    Serial.println(" ");
     meanReactionTime += (reactionTimes[i] / nTrials);
   }
   Serial.print("\nAverage reaction time: ");
