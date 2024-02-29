@@ -36,7 +36,7 @@ unsigned long stimulusDelay;
 // what time the cue started (when begin ends)
 unsigned long cueTurnOn = 0;
 // how long the cue stays on
-unsigned long cueLength = 100;
+unsigned long cueLength = 150;
 // when did the last trial end
 unsigned long trialEnded = 0;
 // how long between trials
@@ -46,6 +46,8 @@ unsigned long betweenTrials = 3000;
 int nTrials = 10;
 int numValid = 5;
 int numInvalid = 5;
+// probability out of 100 that the cue should be valid
+float probValid = 75;
 // for indexing the following arrays
 int trialCount = -1;
 // states what the cues should be (valid, invalid)
@@ -56,9 +58,6 @@ int endoExo[10] = {};
 bool correctness[10] = {};
 // results
 unsigned long reactionTimes[10];
-
-// probability out of 100 that the cue should be valid
-float probValid = 50;
 
 // deciding what types to do
 int cueIndex = 0;
