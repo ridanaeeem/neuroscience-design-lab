@@ -46,8 +46,9 @@ unsigned long betweenTrials = 3000;
 int nTrials = 10;
 int numValid = 5;
 int numInvalid = 5;
-int trialCount = 0;
+int trialCount = -1;
 int cues[10] = {};
+bool correctness[10] = {};
 
 // probability out of 100 that the cue should be valid
 float probValid = 50;
@@ -62,7 +63,7 @@ int cueNumber = 0;
 // int typeNumber = 0;
 
 // results
-unsigned long reactionTimes[5];
+unsigned long reactionTimes[10];
 
 void setup() {
   Serial.begin(9600);
@@ -261,7 +262,7 @@ void loop() {
             // turn light off and set lightOn to zero so this loop doesn't repeat
             digitalWrite(leftStimulus, LOW);
             lightOn = 0;
-            programState = prompt;
+            programState = programSetup;
           }
         // reacted within an appropriate amount of time and pressed the right button
         if (leftButtonState == 1){
@@ -271,8 +272,9 @@ void loop() {
           digitalWrite(leftStimulus, LOW);
           Serial.println(reactionTime);
           // add to array
-          reactionTimes[trialCount] = reactionTime;
           trialCount++;
+          reactionTimes[trialCount] = reactionTime;
+          correctness[trialCount] = true;
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -281,12 +283,18 @@ void loop() {
         // reacted within an appropriate amount of time but pressed the wrong button
         if (rightButtonState == 1){
           // reaction time is the current time minus the time the light turned on
+          reactionTime = millis() - lightOn;
+          // turn the light off
           digitalWrite(leftStimulus, LOW);
-          Serial.println("wrong");
+          Serial.println(reactionTime);
+          // add to array
+          trialCount++;
+          reactionTimes[trialCount] = reactionTime;
+          correctness[trialCount] = false;
+          if (trialCount == nTrials) displayResults();
+          // go back to beginning
           trialEnded = currentMillis;
           programState = begin;
-          reactionTimes[trialCount] = reactionTime;
-          trialCount++;
         }
       break;
 
@@ -297,7 +305,7 @@ void loop() {
           digitalWrite(rightStimulus, LOW);
           lightOn = 0;
           trialEnded = currentMillis;
-          programState = prompt;
+          programState = programSetup;
         }
         // reacted within an appropriate amount of time and pressed the right button
         if (rightButtonState == 1){
@@ -307,8 +315,9 @@ void loop() {
           digitalWrite(rightStimulus, LOW);
           Serial.println(reactionTime);
           // add to array
-          reactionTimes[trialCount] = reactionTime;
           trialCount++;
+          reactionTimes[trialCount] = reactionTime;
+          correctness[trialCount] = true;
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -317,12 +326,18 @@ void loop() {
         // reacted within an appropriate amount of time but pressed the wrong button
         if (leftButtonState == 1){
           // reaction time is the current time minus the time the light turned on
+          reactionTime = millis() - lightOn;
+          // turn the light off
           digitalWrite(rightStimulus, LOW);
-          Serial.println("wrong");
+          Serial.println(reactionTime);
+          // add to array
+          trialCount++;
+          reactionTimes[trialCount] = reactionTime;
+          correctness[trialCount] = false;
+          if (trialCount == nTrials) displayResults();
+          // go back to beginning
           trialEnded = currentMillis;
           programState = begin;
-          reactionTimes[trialCount] = reactionTime;
-          trialCount++;
         }
       break;
 
@@ -338,6 +353,8 @@ void displayResults(void){
   Serial.print("All reaction times: ");
   for (int i=0; i < nTrials; i++){
     Serial.print(reactionTimes[i]);
+    Serial.print(" ");
+    Serial.println(correctness[i]);
     Serial.print(" ");
     meanReactionTime += (reactionTimes[i] / nTrials);
   }
