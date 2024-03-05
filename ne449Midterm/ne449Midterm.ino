@@ -102,7 +102,7 @@ void loop() {
       // decides what order to do cues in according to specficications above
       case programSetup:
         // swapping based randomization code, w requirements for valid vs invalid
-        for (int i=0; i < nTrials; i++){
+        for (int i=trialCount; i < nTrials; i++){
           if (validCount > 0){
             float rand = random(0,100);
             if (rand <= 50) cues[i] = 0; //validLeft
@@ -124,6 +124,11 @@ void loop() {
         // move on once user presses button
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
+          Serial.println("post-swap");
+          for (int i=0; i < nTrials; i++){
+            Serial.println(cues[i]);
+          }
+          Serial.println(" ");
         }
       break;
 
@@ -154,6 +159,8 @@ void loop() {
             // what cue should be done at this trial
             cueNumber = cues[cueIndex];
             cueIndex++;
+            Serial.println(numValid);
+            Serial.println(numInvalid);
             if (cueNumber == 0) programState = validLeft;
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
@@ -330,8 +337,8 @@ void loop() {
         // reacted within an appropriate amount of time and pressed the right button
         if (leftButtonState == 1){
           // keep track of how many valid vs invalid trials have been done
-          if (cues[trialCount] == 0) numValid--;
-          else if (cues[trialCount] == 2) numInvalid--;
+          if (cueNumber == 0) numValid--;
+          else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
@@ -349,8 +356,8 @@ void loop() {
         // reacted within an appropriate amount of time but pressed the wrong button
         if (rightButtonState == 1){
           // keep track of how many valid vs invalid trials have been done
-          if (cues[trialCount] == 0) numValid--;
-          else if (cues[trialCount] == 2) numInvalid--;
+          if (cueNumber == 0) numValid--;
+          else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
@@ -377,8 +384,8 @@ void loop() {
         // reacted within an appropriate amount of time and pressed the right button
         if (rightButtonState == 1){
           // keep track of how many valid vs invalid trials have been done
-          if (cues[trialCount] == 1) numValid--;
-          else if (cues[trialCount] == 3) numInvalid--;
+          if (cueNumber == 1) numValid--;
+          else if (cueNumber == 3) numInvalid--;
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
@@ -391,8 +398,8 @@ void loop() {
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (leftButtonState == 1){
-          if (cues[trialCount] == 1) numValid--;
-          else if (cues[trialCount] == 3) numInvalid--;
+          if (cueNumber == 1) numValid--;
+          else if (cueNumber == 3) numInvalid--;
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
@@ -435,10 +442,12 @@ void displayResults(void){
   Serial.print("\n");
 }
 
-// via chatgpt, randomizes the items in an array by swapping their positions
+// originally via chatgpt, randomizes the items in an array by swapping their positions
+// modified to only swap the elements after the trialCount, so that not everything
+// will be swapped if the array was altered due to timing out
 void randomizeArray(int arr[], int size) {
-  for (int i = size - 1; i > 0; i--) {
-    int j = random(0, i + 1); // Generate a random index between 0 and i
+  for (int i = size - 1; i >= trialCount; i--) {
+    int j = random(trialCount, i + 1); // Generate a random index between trialCount and i
     // Swap arr[i] with the element at the random index
     int temp = arr[i];
     arr[i] = arr[j];
