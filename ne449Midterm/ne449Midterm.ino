@@ -98,7 +98,6 @@ void loop() {
       case programSetup:
 
         // swapping based randomization code, w requirements for valid vs invalid
-        // Serial.println("before");
         for (int i=0; i < nTrials; i++){
           if (numValid != 0){
             float rand = random(0,100);
@@ -116,36 +115,6 @@ void loop() {
         }
 
         randomizeArray(cues, nTrials);
-
-        // Serial.println("after randomization");
-        // for (int i=0; i < nTrials; i++){
-        //   Serial.println(cues[i]);
-        // }
-
-        // probability based randomization code, w probability of valid vs invalid
-        // 50-50 chance for left or right
-        //   for (int i=0; i < nTrials; i++){
-        //   float rand = random(0,100);
-        //   // invalid cue
-        //   if (rand <= (100 - probValid)){
-        //     if (rand <= ((100 - probValid)/2)){
-        //       cueNumber = 2; //invalidLeft
-        //     } else {
-        //       cueNumber = 3; //invalidRight
-        //     }
-        //   // valid cue
-        //   } else {
-        //     if (rand >= probValid && rand <= (probValid + (probValid/2))){
-        //       cueNumber = 0; //validLeft
-        //     } else {
-        //       cueNumber = 1; //validRight
-        //     }
-        //   }
-        //   cues[i] = cueNumber;
-
-        //   // 0 is endo 1 is exo
-        //   endoExo[i] = random(2);
-        // }
         
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
@@ -179,6 +148,8 @@ void loop() {
             if (cueNumber == 2) programState = invalidLeft;
             if (cueNumber == 3) programState = invalidRight;
           }
+        } else {
+          programState = prompt;
         }
       break;
 
@@ -339,6 +310,7 @@ void loop() {
         if (leftButtonState == 1){
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
+          Serial.println(reactionTime);
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           // add to array
@@ -354,6 +326,7 @@ void loop() {
         if (rightButtonState == 1){
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
+          Serial.println(reactionTime);
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           // add to array
@@ -379,6 +352,7 @@ void loop() {
         if (rightButtonState == 1){
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
+          Serial.println(reactionTime);
           // turn the light off
           digitalWrite(rightStimulus, LOW);
           // add to array
@@ -394,6 +368,7 @@ void loop() {
         if (leftButtonState == 1){
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
+          Serial.println(reactionTime);
           // turn the light off
           digitalWrite(rightStimulus, LOW);
           // add to array
