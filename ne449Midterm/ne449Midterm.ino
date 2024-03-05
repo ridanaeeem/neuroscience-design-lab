@@ -44,7 +44,7 @@ unsigned long betweenTrials = 3000;
 // trial specifications 
 // for indexing the arrays
 int trialCount = 0;
-// update numbers below if trial number changed from 10
+// update numbers below if trial number changes from 10
 // make sure valid + invalid = nTrials 
 int numValid = 5;
 int numInvalid = 5;
@@ -77,6 +77,7 @@ void setup() {
 
   programState = programSetup;
   randomSeed(analogRead(0));
+
   Serial.println(" ");
   Serial.println("In this experiment a light will flash and then an LED will turn on.");
   Serial.println("Once this LED turns on after the flash, click the button corresponding to that LED.");
@@ -87,14 +88,16 @@ void setup() {
 }
 
 void loop() {
+  // only proceed if not at desired number of trials yet
   if (trialCount < nTrials){
+    // always keep track of current time and button states
     unsigned long currentMillis = millis();
     leftButtonState = digitalRead(leftButton);
     rightButtonState = digitalRead(rightButton);
 
     switch(programState){
+      // decides what order to do cues in according to specficications above
       case programSetup:
-
         // swapping based randomization code, w requirements for valid vs invalid
         for (int i=0; i < nTrials; i++){
           if (numValid != 0){
@@ -114,38 +117,45 @@ void loop() {
 
         randomizeArray(cues, nTrials);
         
+        // move on once user presses button
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
         }
-
       break;
 
+      // marks when the trial starts
       case prompt:
         // make sure everything is off in case coming from cheating or timing out
         digitalWrite(ledLeftCue, LOW);
         digitalWrite(ledRightCue, LOW);
+        // make sure button is not being held down and then proceed
         if (leftButtonState == 0 && rightButtonState == 0){
-          // message for starting the experiment
+          // marks when to start keeping track of the time for next state
           trialEnded = currentMillis;
           programState = begin;
         }
       break;
 
+      // keeps track of when to turn the cue on
       case begin:
         // if enough time has elapsed between the last trial and right now, start a new one
+        // only if the user is not holding down the button
         if (leftButtonState == 0 && rightButtonState == 0){
           if (currentMillis - trialEnded >= betweenTrials){
+            // how long until stimulus should turn on
             stimulusDelay = random(1000,3000);
             previousMillis = currentMillis;
             cueTurnOn = currentMillis;
+
+            // what cue should be done at this trial
             cueNumber = cues[cueIndex];
             cueIndex++;
-
             if (cueNumber == 0) programState = validLeft;
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
             if (cueNumber == 3) programState = invalidRight;
           }
+        // if the user is holding down the button, go back and wait for them to let go
         } else {
           programState = prompt;
         }
@@ -153,17 +163,21 @@ void loop() {
 
       // left cue --> left stimulus
       case validLeft:
+      // button should not be pressed until the stimulus turns on
         if (leftButtonState == 1 || rightButtonState == 1){
           Serial.println("Stop cheating");
           programState = prompt;
         }
 
         if (endoExo[cueIndex] == 0){
-          // endogenous cue
+          // endogenous cue - cue is in the central visual field
+          // keep cue on for the specified amount of time
           if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(ledLeftCue, HIGH);
+          // once that time has passed, turn the cue off
           } else {
             digitalWrite(ledLeftCue, LOW);
+            // after stimulus delay time has passed, turn the stimulus on and wait for response
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
               digitalWrite(leftStimulus, HIGH);
@@ -172,11 +186,14 @@ void loop() {
             }
           }
         } else {
-          // exogenous cue
+          // exogenous cue - cue is in peripheral aka cue is also the stimulus LED
+          // keep cue on for the specified amount of time
           if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(leftStimulus, HIGH);
+          // once that time has passed, turn the cue off
           } else {
             digitalWrite(leftStimulus, LOW);
+            // after stimulus delay time has passed, turn the stimulus on and wait for response
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
               digitalWrite(leftStimulus, HIGH);
@@ -296,7 +313,9 @@ void loop() {
         }
       break;
 
+
       case waitLeftPress:
+        // if user takes more than 5 seconds, start over
         if (millis() - lightOn >= 5000){
             Serial.println("You took too long. Press the button when you're ready to try again");
             // turn light off and set lightOn to zero so this loop doesn't repeat
@@ -341,40 +360,31 @@ void loop() {
       case waitRightPress:
         if (millis() - lightOn >= 5000){
           Serial.println("You took too long. Press the button when you're ready to try again");
-          // turn light off and set lightOn to zero so this loop doesn't repeat
           digitalWrite(rightStimulus, LOW);
           lightOn = 0;
           programState = prompt;
         }
         // reacted within an appropriate amount of time and pressed the right button
         if (rightButtonState == 1){
-          // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
-          // turn the light off
           digitalWrite(rightStimulus, LOW);
-          // add to array
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
           trialCount++;
           if (trialCount == nTrials) displayResults();
-          // go back to beginning
           trialEnded = currentMillis;
           programState = begin;
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (leftButtonState == 1){
-          // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
-          // turn the light off
           digitalWrite(rightStimulus, LOW);
-          // add to array
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
           trialCount++;
           if (trialCount == nTrials) displayResults();
-          // go back to beginning
           trialEnded = currentMillis;
           programState = begin;
         }
@@ -386,7 +396,7 @@ void loop() {
   }
 }
 
-// returns nothing, takes in nothing
+// returns nothing, takes in nothing, just displays the results
 void displayResults(void){
   float meanReactionTime = 0;
   Serial.print("All reaction times: ");
@@ -410,7 +420,7 @@ void displayResults(void){
   Serial.print("\n");
 }
 
-// via chatgpt
+// via chatgpt, randomizes the items in an array by swapping their positions
 void randomizeArray(int arr[], int size) {
   for (int i = size - 1; i > 0; i--) {
     int j = random(0, i + 1); // Generate a random index between 0 and i
