@@ -19,10 +19,9 @@ const int ledRightCue = 10;
 int leftButton = 4;
 int rightButton = 11;
 
-// states of LEDS and buttons
-int ledState = LOW;  // ledState used to set the LED
-int leftButtonState = 0;  // variable for reading the pushbutton status
-int rightButtonState = 0;  // variable for reading the pushbutton status
+// states for reading buttons
+int leftButtonState = 0; 
+int rightButtonState = 0; 
 
 // time variables
 // how long the light has been on
@@ -42,14 +41,16 @@ unsigned long trialEnded = 0;
 // how long between trials
 unsigned long betweenTrials = 3000;
 
-// trial specifications - make sure valid + invalid = nTrials
-int nTrials = 10;
-int numValid = 5;
-int numInvalid = 5;
+// trial specifications 
 // probability out of 100 that the cue should be valid
 float probValid = 75;
-// for indexing the following arrays
+// for indexing the arrays
 int trialCount = -1;
+// update numbers below if trial number changed from 10
+// make sure valid + invalid = nTrials 
+int numValid = 5;
+int numInvalid = 5;
+int nTrials = 10;
 // states what the cues should be (valid, invalid)
 int cues[10] = {};
 // states what the cues should be (endogenous 0, exogenous 1)
@@ -59,9 +60,15 @@ bool correctness[10] = {};
 // results
 unsigned long reactionTimes[10];
 
-// deciding what types to do
+// starting with the first position in the array
 int cueIndex = 0;
 int cueNumber = 0;
+
+// for printing purposes, enumerates correctness and cue types
+String correctnessDisplay[] = {"incorrect", "correct"};
+String cuesDisplay[] = {"validLeft", "validRight", "invalidLeft", "invalidRight"};
+String endoExoDisplay[] = {"endogenous", "exogenous"};
+
 
 void setup() {
   Serial.begin(9600);
@@ -92,23 +99,23 @@ void loop() {
 
         // swapping based randomization code, w requirements for valid vs invalid
         // Serial.println("before");
-        // for (int i=0; i < nTrials; i++){
-        //   if (numValid != 0){
-        //     float rand = random(0,100);
-        //     if (rand <= 50) cues[i] = 0;
-        //     else cues[i] = 1;
-        //     numValid --;
-        //   } else if (numInvalid != 0){
-        //     float rand = random(0,100);
-        //     if (rand <= 50) cues[i] = 2;
-        //     else cues[i] = 3;
-        //     numInvalid --;
-        //   }
-        //   //0 is endo 1 is exo
-        //   endoExo[i] = random(2);
-        // }
+        for (int i=0; i < nTrials; i++){
+          if (numValid != 0){
+            float rand = random(0,100);
+            if (rand <= 50) cues[i] = 0;
+            else cues[i] = 1;
+            numValid --;
+          } else if (numInvalid != 0){
+            float rand = random(0,100);
+            if (rand <= 50) cues[i] = 2;
+            else cues[i] = 3;
+            numInvalid --;
+          }
+          //0 is endo 1 is exo
+          endoExo[i] = random(2);
+        }
 
-        // randomizeArray(cues, nTrials);
+        randomizeArray(cues, nTrials);
 
         // Serial.println("after randomization");
         // for (int i=0; i < nTrials; i++){
@@ -117,28 +124,28 @@ void loop() {
 
         // probability based randomization code, w probability of valid vs invalid
         // 50-50 chance for left or right
-          for (int i=0; i < nTrials; i++){
-          float rand = random(0,100);
-          // invalid cue
-          if (rand <= (100 - probValid)){
-            if (rand <= ((100 - probValid)/2)){
-              cueNumber = 2; //invalidLeft
-            } else {
-              cueNumber = 3; //invalidRight
-            }
-          // valid cue
-          } else {
-            if (rand >= probValid && rand <= (probValid + (probValid/2))){
-              cueNumber = 0; //validLeft
-            } else {
-              cueNumber = 1; //validRight
-            }
-          }
-          cues[i] = cueNumber;
+        //   for (int i=0; i < nTrials; i++){
+        //   float rand = random(0,100);
+        //   // invalid cue
+        //   if (rand <= (100 - probValid)){
+        //     if (rand <= ((100 - probValid)/2)){
+        //       cueNumber = 2; //invalidLeft
+        //     } else {
+        //       cueNumber = 3; //invalidRight
+        //     }
+        //   // valid cue
+        //   } else {
+        //     if (rand >= probValid && rand <= (probValid + (probValid/2))){
+        //       cueNumber = 0; //validLeft
+        //     } else {
+        //       cueNumber = 1; //validRight
+        //     }
+        //   }
+        //   cues[i] = cueNumber;
 
-          // 0 is endo 1 is exo
-          endoExo[i] = random(2);
-        }
+        //   // 0 is endo 1 is exo
+        //   endoExo[i] = random(2);
+        // }
         
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
@@ -147,7 +154,7 @@ void loop() {
       break;
 
       case prompt:
-        // make sure everything is off in case coming from cheating
+        // make sure everything is off in case coming from cheating or timing out
         digitalWrite(ledLeftCue, LOW);
         digitalWrite(ledRightCue, LOW);
         if (leftButtonState == 0 && rightButtonState == 0){
@@ -326,7 +333,7 @@ void loop() {
             // turn light off and set lightOn to zero so this loop doesn't repeat
             digitalWrite(leftStimulus, LOW);
             lightOn = 0;
-            programState = programSetup;
+            programState = prompt;
           }
         // reacted within an appropriate amount of time and pressed the right button
         if (leftButtonState == 1){
@@ -366,8 +373,7 @@ void loop() {
           // turn light off and set lightOn to zero so this loop doesn't repeat
           digitalWrite(rightStimulus, LOW);
           lightOn = 0;
-          trialEnded = currentMillis;
-          programState = programSetup;
+          programState = prompt;
         }
         // reacted within an appropriate amount of time and pressed the right button
         if (rightButtonState == 1){
@@ -413,13 +419,16 @@ void displayResults(void){
   Serial.print("All reaction times: ");
   Serial.println(" ");
   for (int i=0; i < nTrials; i++){
+    int correctIndex = correctness[i];
+    int cueIndex = cues[i];
+    int endoExoIndex = endoExo[i];
     Serial.print(reactionTimes[i]);
-    Serial.print(" correct? ");
-    Serial.print(correctness[i]);
-    Serial.print(" cue? ");
-    Serial.print(cues[i]);
-    Serial.print(" endoExo? ");
-    Serial.print(endoExo[i]);
+    Serial.print(" ");
+    Serial.print(correctnessDisplay[correctIndex]);
+    Serial.print(" ");
+    Serial.print(cuesDisplay[cueIndex]);
+    Serial.print(" ");
+    Serial.print(endoExoDisplay[endoExoIndex]);
     Serial.println(" ");
     meanReactionTime += (reactionTimes[i] / nTrials);
   }
