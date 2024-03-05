@@ -45,7 +45,7 @@ unsigned long betweenTrials = 3000;
 // probability out of 100 that the cue should be valid
 float probValid = 75;
 // for indexing the arrays
-int trialCount = -1;
+int trialCount = 0;
 // update numbers below if trial number changed from 10
 // make sure valid + invalid = nTrials 
 int numValid = 5;
@@ -314,9 +314,9 @@ void loop() {
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           // add to array
-          trialCount++;
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
+          trialCount++;
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -330,9 +330,9 @@ void loop() {
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           // add to array
-          trialCount++;
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
+          trialCount++;
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -356,9 +356,9 @@ void loop() {
           // turn the light off
           digitalWrite(rightStimulus, LOW);
           // add to array
-          trialCount++;
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
+          trialCount++;
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -372,9 +372,9 @@ void loop() {
           // turn the light off
           digitalWrite(rightStimulus, LOW);
           // add to array
-          trialCount++;
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
+          trialCount++;
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
