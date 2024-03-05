@@ -42,8 +42,6 @@ unsigned long trialEnded = 0;
 unsigned long betweenTrials = 3000;
 
 // trial specifications 
-// probability out of 100 that the cue should be valid
-float probValid = 75;
 // for indexing the arrays
 int trialCount = 0;
 // update numbers below if trial number changed from 10
