@@ -94,29 +94,33 @@ void loop() {
     unsigned long currentMillis = millis();
     leftButtonState = digitalRead(leftButton);
     rightButtonState = digitalRead(rightButton);
+    // these will dynamically update with each trial
+    int validCount = numValid;
+    int invalidCount = numInvalid;
 
     switch(programState){
       // decides what order to do cues in according to specficications above
       case programSetup:
         // swapping based randomization code, w requirements for valid vs invalid
         for (int i=0; i < nTrials; i++){
-          if (numValid != 0){
+          if (validCount > 0){
             float rand = random(0,100);
-            if (rand <= 50) cues[i] = 0;
-            else cues[i] = 1;
-            numValid --;
-          } else if (numInvalid != 0){
+            if (rand <= 50) cues[i] = 0; //validLeft
+            else cues[i] = 1; // validRight
+            validCount --;
+          } else if (invalidCount > 0){
             float rand = random(0,100);
-            if (rand <= 50) cues[i] = 2;
-            else cues[i] = 3;
-            numInvalid --;
+            if (rand <= 50) cues[i] = 2; //invalidLeft
+            else cues[i] = 3; //invalidRight
+            invalidCount --;
           }
           //0 is endo 1 is exo
           endoExo[i] = random(2);
         }
 
+        // randomize order of array
         randomizeArray(cues, nTrials);
-        
+
         // move on once user presses button
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
@@ -321,10 +325,13 @@ void loop() {
             // turn light off and set lightOn to zero so this loop doesn't repeat
             digitalWrite(leftStimulus, LOW);
             lightOn = 0;
-            programState = prompt;
+            programState = programSetup;
           }
         // reacted within an appropriate amount of time and pressed the right button
         if (leftButtonState == 1){
+          // keep track of how many valid vs invalid trials have been done
+          if (cues[trialCount] == 0) numValid--;
+          else if (cues[trialCount] == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
@@ -341,6 +348,9 @@ void loop() {
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (rightButtonState == 1){
+          // keep track of how many valid vs invalid trials have been done
+          if (cues[trialCount] == 0) numValid--;
+          else if (cues[trialCount] == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
@@ -362,10 +372,13 @@ void loop() {
           Serial.println("You took too long. Press the button when you're ready to try again");
           digitalWrite(rightStimulus, LOW);
           lightOn = 0;
-          programState = prompt;
+          programState = programSetup;
         }
         // reacted within an appropriate amount of time and pressed the right button
         if (rightButtonState == 1){
+          // keep track of how many valid vs invalid trials have been done
+          if (cues[trialCount] == 1) numValid--;
+          else if (cues[trialCount] == 3) numInvalid--;
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
@@ -378,6 +391,8 @@ void loop() {
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (leftButtonState == 1){
+          if (cues[trialCount] == 1) numValid--;
+          else if (cues[trialCount] == 3) numInvalid--;
           reactionTime = millis() - lightOn;
           Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
