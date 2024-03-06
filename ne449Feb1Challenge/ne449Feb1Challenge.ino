@@ -1,31 +1,3 @@
-/*
-  Calibration
-
-  Demonstrates one technique for calibrating sensor input. The sensor readings
-  during the first five seconds of the sketch execution define the minimum and
-  maximum of expected values attached to the sensor pin.
-
-  The sensor minimum and maximum initial values may seem backwards. Initially,
-  you set the minimum high and listen for anything lower, saving it as the new
-  minimum. Likewise, you set the maximum low and listen for anything higher as
-  the new maximum.
-
-  The circuit:
-  - analog sensor (potentiometer will do) attached to analog input 0
-  - LED attached from digital pin 9 to ground through 220 ohm resistor
-
-  created 29 Oct 2008
-  by David A Mellis
-  modified 30 Aug 2011
-  by Tom Igoe
-  modified 07 Apr 2017
-  by Zachary J. Fields
-
-  This example code is in the public domain.
-
-  https://www.arduino.cc/en/Tutorial/BuiltInExamples/Calibration
-*/
-
 // These constants won't change:
 const int sensorPin = A0;  // pin that the sensor is attached to
 const int ledPin = 9;      // pin that the LED is attached to
@@ -84,6 +56,7 @@ void setup() {
 }
 
 void loop() {
+  // https://www.arduino.cc/en/Tutorial/BuiltInExamples/Calibration
   // read the sensor:
   sensorValue = analogRead(sensorPin);
   Serial.println(sensorValue);
@@ -92,6 +65,7 @@ void loop() {
   // apply the calibration to the sensor reading
   // maps Min --> 0, Max --> 255, and everything else in between
   sensorValue = map(sensorValue, sensorMin, sensorMax, 0, 255);
+
 
   // recalibrating
   if (lastI < 400) {
