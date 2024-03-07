@@ -12,10 +12,15 @@ typedef enum{
 state_defs programState;
 
 // pin numbers
-const int leftStimulus = 2;  
-const int rightStimulus = 13;
+const int ledLeftStimulus = 2;  
+const int ledRightStimulus = 13;
 const int ledLeftCue = 7; 
 const int ledRightCue = 10;
+const int vibLeftStimulus = 5;
+const int vibRightStimulus = 9;
+const int vibLeftCue = 6;
+const int vibRightCue = 8;
+
 int leftButton = 4;
 int rightButton = 11;
 
@@ -24,11 +29,11 @@ int leftButtonState = 0;
 int rightButtonState = 0; 
 
 // time variables
-// how long the light has been on
-unsigned long lightOn = 0;
+// how long the light/vib has been on
+unsigned long stimOn = 0;
 // how long it took the person to react
 unsigned long reactionTime = 0;
-// last time light was turned on
+// last time light/vib was turned on
 unsigned long previousMillis = 0;
 // how long (ms) until stimulus should turn on
 unsigned long stimulusDelay; 
@@ -44,22 +49,26 @@ unsigned long betweenTrials = 3000;
 // trial specifications 
 // for indexing the arrays
 int trialCount = 0;
-// update numbers below if trial number changes from 10
+// update numbers below if trial number changes from 20
 // make sure valid + invalid = nTrials 
-int numValid = 5;
-int numInvalid = 5;
-int nTrials = 10;
+int numValid = 10;
+int numInvalid = 10;
+int nTrials = 20;
 // states what the cues should be (valid, invalid)
-int cues[10] = {};
+int cues[20] = {};
 // states what the cues should be (endogenous 0, exogenous 1)
-int endoExo[10] = {};
+int endoExo[20] = {};
 // whether or not they responded correctly
-bool correctness[10] = {};
+bool correctness[20] = {};
 // results
-unsigned long reactionTimes[10];
+unsigned long reactionTimes[20];
 
 // the current cue type
 int cueNumber = 0;
+
+//what stimulus type we are working with
+bool visual = true;
+bool tactile = false;
 
 // for printing purposes, enumerates correctness and cue types
 String correctnessDisplay[] = {"incorrect", "correct"};
@@ -69,13 +78,23 @@ String endoExoDisplay[] = {"endogenous", "exogenous"};
 
 void setup() {
   Serial.begin(9600);
-  pinMode(leftStimulus, OUTPUT);
-  pinMode(rightStimulus, OUTPUT);
+  // set all the stimuli to be outputs
+  pinMode(ledLeftStimulus, OUTPUT);
+  pinMode(ledRightStimulus, OUTPUT);
   pinMode(ledLeftCue, OUTPUT);
   pinMode(ledRightCue, OUTPUT);
+  pinMode(vibLeftStimulus, OUTPUT);
+  pinMode(vibRightStimulus, OUTPUT);
+  pinMode(vibLeftCue, OUTPUT);
+  pinMode(vibRightCue, OUTPUT);
 
   programState = programSetup;
   randomSeed(analogRead(0));
+
+  // digitalWrite(vibRightCue, HIGH);
+  // digitalWrite(vibLeftCue, HIGH);
+  // digitalWrite(vibLeftStimulus, HIGH);
+  // digitalWrite(vibRightStimulus, HIGH);
 
   Serial.println(" ");
   Serial.println("In this experiment a light will flash and then an LED will turn on.");
@@ -136,8 +155,13 @@ void loop() {
       // marks when the trial starts
       case prompt:
         // make sure everything is off in case coming from cheating or timing out
-        digitalWrite(ledLeftCue, LOW);
-        digitalWrite(ledRightCue, LOW);
+        if (visual){
+          digitalWrite(ledLeftCue, LOW);
+          digitalWrite(ledRightCue, LOW);
+        } else if (tactile) {
+          digitalWrite(vibLeftCue, LOW);
+          digitalWrite(vibRightCue, LOW);
+        }
         // make sure button is not being held down and then proceed
         if (leftButtonState == 0 && rightButtonState == 0){
           // marks when to start keeping track of the time for next state
@@ -163,6 +187,7 @@ void loop() {
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
             if (cueNumber == 3) programState = invalidRight;
+            Serial.println(cuesDisplay[cueNumber]);
           }
         // if the user is holding down the button, go back and wait for them to let go
         } else {
@@ -174,7 +199,7 @@ void loop() {
       case validLeft:
       // button should not be pressed until the stimulus turns on
         if (leftButtonState == 1 || rightButtonState == 1){
-          Serial.println("Stop cheating");
+          Serial.println("Stop cheating VL");
           programState = prompt;
         }
 
@@ -182,15 +207,18 @@ void loop() {
           // endogenous cue - cue is in the central visual field
           // keep cue on for the specified amount of time
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(ledLeftCue, HIGH);
+            if (visual) digitalWrite(ledLeftCue, HIGH);
+            else if (tactile) digitalWrite(vibLeftCue, HIGH);
           // once that time has passed, turn the cue off
           } else {
-            digitalWrite(ledLeftCue, LOW);
+            if (visual) digitalWrite(ledLeftCue, LOW);
+            else if (tactile) digitalWrite(vibLeftCue, LOW);
             // after stimulus delay time has passed, turn the stimulus on and wait for response
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(leftStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledLeftStimulus, HIGH);
+              else if (tactile) digitalWrite(vibLeftStimulus, HIGH);
+              stimOn = millis();
               programState = waitLeftPress;
             }
           }
@@ -198,15 +226,18 @@ void loop() {
           // exogenous cue - cue is in peripheral aka cue is also the stimulus LED
           // keep cue on for the specified amount of time
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(leftStimulus, HIGH);
+            if (visual) digitalWrite(ledLeftStimulus, HIGH);
+            else if (tactile) digitalWrite(vibLeftStimulus, HIGH);
           // once that time has passed, turn the cue off
           } else {
-            digitalWrite(leftStimulus, LOW);
+            if (visual) digitalWrite(ledLeftStimulus, LOW);
+            else if (tactile) digitalWrite(vibLeftStimulus, LOW);
             // after stimulus delay time has passed, turn the stimulus on and wait for response
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(leftStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledLeftStimulus, HIGH);
+              else if (tactile) digitalWrite(vibLeftStimulus, HIGH);
+              stimOn = millis();
               programState = waitLeftPress;
             }
           }
@@ -217,33 +248,38 @@ void loop() {
       // right cue --> right stimulus
       case validRight:
         if (leftButtonState == 1 || rightButtonState == 1){
-          Serial.println("Stop cheating");
+          Serial.println("Stop cheating VR");
           programState = prompt;
         }
 
         if (endoExo[trialCount] == 0){
           // endogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(ledRightCue, HIGH);
+            if (visual) digitalWrite(ledRightCue, HIGH);
+            else if (tactile) digitalWrite(vibRightCue, HIGH);
           } else {
             digitalWrite(ledRightCue, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(rightStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledRightStimulus, HIGH);
+              if (tactile) digitalWrite(vibRightStimulus, HIGH);
+              stimOn = millis();
               programState = waitRightPress;
             }
           }
         } else {
           // exogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(rightStimulus, HIGH);
+            if (visual) digitalWrite(ledRightStimulus, HIGH);
+            if (tactile) digitalWrite(vibRightStimulus, HIGH);
           } else {
-            digitalWrite(rightStimulus, LOW);
+            if (visual) digitalWrite(ledRightStimulus, LOW);
+            else if (tactile) digitalWrite(vibRightStimulus, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(rightStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledRightStimulus, HIGH);
+              else if (tactile) digitalWrite(vibRightStimulus, HIGH);
+              stimOn = millis();
               programState = waitRightPress;
             }
           }
@@ -253,33 +289,39 @@ void loop() {
       // right cue --> left stimulus
       case invalidLeft:
         if (leftButtonState == 1 || rightButtonState == 1){
-          Serial.println("Stop cheating");
+          Serial.println("Stop cheating IL");
           programState = prompt;
         }
 
         if (endoExo[trialCount] == 0){
           // endogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(ledRightCue, HIGH);
+            if (visual) digitalWrite(ledRightCue, HIGH);
+            else if (tactile) digitalWrite(vibRightCue, HIGH);
           } else {
-            digitalWrite(ledRightCue, LOW);
+            if (visual) digitalWrite(ledRightCue, LOW);
+            else if (tactile) digitalWrite(vibRightCue, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(leftStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledLeftStimulus, HIGH);
+              else if (tactile) digitalWrite(vibLeftStimulus, HIGH);
+              stimOn = millis();
               programState = waitLeftPress;
             }
           }
         } else {
           // exogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(rightStimulus, HIGH);
+            if (visual) digitalWrite(ledRightStimulus, HIGH);
+            else if (tactile) digitalWrite(vibRightStimulus, HIGH);
           } else {
-            digitalWrite(rightStimulus, LOW);
+            if (visual) digitalWrite(ledRightStimulus, LOW);
+            else if (tactile) digitalWrite(vibRightStimulus, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(leftStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledLeftStimulus, HIGH);
+              else if (tactile) digitalWrite(vibLeftStimulus, HIGH);
+              stimOn = millis();
               programState = waitLeftPress;
             }
           }
@@ -289,33 +331,39 @@ void loop() {
       // left cue --> right stimulus
       case invalidRight:
         if (leftButtonState == 1 || rightButtonState == 1){
-          Serial.println("Stop cheating");
+          Serial.println("Stop cheating IR");
           programState = prompt;
         }
 
         if (endoExo[trialCount] == 0){
           // endogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(ledLeftCue, HIGH);
+            if (visual) digitalWrite(ledLeftCue, HIGH);
+            else if (tactile) digitalWrite(vibLeftCue, HIGH);
           } else {
-            digitalWrite(ledLeftCue, LOW);
+            if (visual) digitalWrite(ledLeftCue, LOW);
+            else if (tactile) digitalWrite(vibLeftCue, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(rightStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledRightStimulus, HIGH);
+              else if (visual) digitalWrite(vibRightStimulus, HIGH);
+              stimOn = millis();
               programState = waitRightPress;
             }
           }
         } else {
           // exogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
-            digitalWrite(leftStimulus, HIGH);
+            if (visual) digitalWrite(ledLeftStimulus, HIGH);
+            else if (tactile) digitalWrite(vibLeftStimulus, HIGH);
           } else {
-            digitalWrite(leftStimulus, LOW);
+            if (visual) digitalWrite(ledLeftStimulus, LOW);
+            else if (tactile) digitalWrite(vibLeftStimulus, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
-              digitalWrite(rightStimulus, HIGH);
-              lightOn = millis();
+              if (visual) digitalWrite(ledRightStimulus, HIGH);
+              else if (tactile) digitalWrite(vibRightStimulus, HIGH);
+              stimOn = millis();
               programState = waitRightPress;
             }
           }
@@ -325,11 +373,12 @@ void loop() {
 
       case waitLeftPress:
         // if user takes more than 5 seconds, start over
-        if (millis() - lightOn >= 5000){
+        if (millis() - stimOn >= 5000){
             Serial.println("You took too long. Press the button when you're ready to try again");
-            // turn light off and set lightOn to zero so this loop doesn't repeat
-            digitalWrite(leftStimulus, LOW);
-            lightOn = 0;
+            // turn light off and set stimOn to zero so this loop doesn't repeat
+            if (visual) digitalWrite(ledLeftStimulus, LOW);
+            else if (tactile) digitalWrite(vibLeftStimulus, LOW);
+            stimOn = 0;
             programState = programSetup;
           }
         // reacted within an appropriate amount of time and pressed the right button
@@ -338,14 +387,19 @@ void loop() {
           if (cueNumber == 0) numValid--;
           else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
-          reactionTime = millis() - lightOn;
-          // Serial.println(reactionTime);
+          reactionTime = millis() - stimOn;
+          Serial.println(reactionTime);
           // turn the light off
-          digitalWrite(leftStimulus, LOW);
+          if (visual) digitalWrite(ledLeftStimulus, LOW);
+          else if (tactile) digitalWrite(vibLeftStimulus, LOW);
           // add to array
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
           trialCount++;
+          if (trialCount == nTrials/2){
+            visual = false;
+            tactile = true;
+          }
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -357,14 +411,19 @@ void loop() {
           if (cueNumber == 0) numValid--;
           else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
-          reactionTime = millis() - lightOn;
-          // Serial.println(reactionTime);
+          reactionTime = millis() - stimOn;
+          Serial.println(reactionTime);
           // turn the light off
-          digitalWrite(leftStimulus, LOW);
+          if (visual) digitalWrite(ledLeftStimulus, LOW);
+          else if (tactile) digitalWrite(vibLeftStimulus, LOW);
           // add to array
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
           trialCount++;
+          if (trialCount == nTrials/2){
+            visual = false;
+            tactile = true;
+          }
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
@@ -373,10 +432,11 @@ void loop() {
       break;
 
       case waitRightPress:
-        if (millis() - lightOn >= 5000){
+        if (millis() - stimOn >= 5000){
           Serial.println("You took too long. Press the button when you're ready to try again");
-          digitalWrite(rightStimulus, LOW);
-          lightOn = 0;
+          if (visual) digitalWrite(ledRightStimulus, LOW);
+          else if (tactile) digitalWrite(vibRightStimulus, LOW);
+          stimOn = 0;
           programState = programSetup;
         }
         // reacted within an appropriate amount of time and pressed the right button
@@ -384,12 +444,17 @@ void loop() {
           // keep track of how many valid vs invalid trials have been done
           if (cueNumber == 1) numValid--;
           else if (cueNumber == 3) numInvalid--;
-          reactionTime = millis() - lightOn;
-          // Serial.println(reactionTime);
-          digitalWrite(rightStimulus, LOW);
+          reactionTime = millis() - stimOn;
+          Serial.println(reactionTime);
+          if (visual) digitalWrite(ledRightStimulus, LOW);
+          else if (tactile) digitalWrite(vibRightStimulus, LOW);
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
           trialCount++;
+          if (trialCount == nTrials/2){
+            visual = false;
+            tactile = true;
+          }
           if (trialCount == nTrials) displayResults();
           trialEnded = currentMillis;
           programState = begin;
@@ -398,12 +463,17 @@ void loop() {
         if (leftButtonState == 1){
           if (cueNumber == 1) numValid--;
           else if (cueNumber == 3) numInvalid--;
-          reactionTime = millis() - lightOn;
-          // Serial.println(reactionTime);
-          digitalWrite(rightStimulus, LOW);
+          reactionTime = millis() - stimOn;
+          Serial.println(reactionTime);
+          if (visual) digitalWrite(ledRightStimulus, LOW);
+          else if (tactile) digitalWrite(vibRightStimulus, LOW);
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
           trialCount++;
+          if (trialCount == nTrials/2){
+            visual = false;
+            tactile = true;
+          }
           if (trialCount == nTrials) displayResults();
           trialEnded = currentMillis;
           programState = begin;
