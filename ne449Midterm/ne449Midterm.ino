@@ -102,6 +102,8 @@ void loop() {
       // decides what order to do cues in according to specficications above
       case programSetup:
         // swapping based randomization code, w requirements for valid vs invalid
+        // only swaps from the current trial we're on to the end
+        // so the older values that already happened are not lost
         for (int i=trialCount; i < nTrials; i++){
           if (validCount > 0){
             float rand = random(0,100);
@@ -157,10 +159,10 @@ void loop() {
             cueTurnOn = currentMillis;
 
             // what cue should be done at this trial
-            cueNumber = cues[cueIndex];
+            cueNumber = cues[trialCount];
             cueIndex++;
-            Serial.println(numValid);
-            Serial.println(numInvalid);
+            // Serial.println(numValid);
+            // Serial.println(numInvalid);
             if (cueNumber == 0) programState = validLeft;
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
@@ -341,6 +343,7 @@ void loop() {
           else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
+          Serial.println(cuesDisplay[cueNumber]);
           Serial.println(reactionTime);
           // turn the light off
           digitalWrite(leftStimulus, LOW);
@@ -360,6 +363,7 @@ void loop() {
           else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
+          Serial.println(cuesDisplay[cueNumber]);
           Serial.println(reactionTime);
           // turn the light off
           digitalWrite(leftStimulus, LOW);
@@ -387,6 +391,7 @@ void loop() {
           if (cueNumber == 1) numValid--;
           else if (cueNumber == 3) numInvalid--;
           reactionTime = millis() - lightOn;
+          Serial.println(cuesDisplay[cueNumber]);
           Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
           reactionTimes[trialCount] = reactionTime;
@@ -401,6 +406,7 @@ void loop() {
           if (cueNumber == 1) numValid--;
           else if (cueNumber == 3) numInvalid--;
           reactionTime = millis() - lightOn;
+          Serial.println(cuesDisplay[cueNumber]);
           Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
           reactionTimes[trialCount] = reactionTime;
@@ -424,14 +430,14 @@ void displayResults(void){
   Serial.print("All reaction times: ");
   Serial.println(" ");
   for (int i=0; i < nTrials; i++){
-    int correctIndex = correctness[i];
-    int cueIndex = cues[i];
+    int correctnessIndex = correctness[i];
+    int cuesIndex = cues[i];
     int endoExoIndex = endoExo[i];
     Serial.print(reactionTimes[i]);
     Serial.print(" ");
-    Serial.print(correctnessDisplay[correctIndex]);
+    Serial.print(correctnessDisplay[correctnessIndex]);
     Serial.print(" ");
-    Serial.print(cuesDisplay[cueIndex]);
+    Serial.print(cuesDisplay[cuesIndex]);
     Serial.print(" ");
     Serial.print(endoExoDisplay[endoExoIndex]);
     Serial.println(" ");
