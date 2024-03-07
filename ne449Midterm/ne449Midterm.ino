@@ -125,11 +125,11 @@ void loop() {
         // move on once user presses button
         if (leftButtonState == 1 || rightButtonState == 1){
           programState = prompt;
-          Serial.println("post-swap");
-          for (int i=0; i < nTrials; i++){
-            Serial.println(cues[i]);
-          }
-          Serial.println(" ");
+          // Serial.println("post-swap");
+          // for (int i=0; i < nTrials; i++){
+          //   Serial.println(cues[i]);
+          // }
+          // Serial.println(" ");
         }
       break;
 
@@ -422,9 +422,11 @@ void displayResults(void){
   Serial.print("All reaction times: ");
   Serial.println(" ");
   for (int i=0; i < nTrials; i++){
+    // get the values at a particular trial's index
     int correctnessIndex = correctness[i];
     int cuesIndex = cues[i];
     int endoExoIndex = endoExo[i];
+    // enumerate those values
     Serial.print(reactionTimes[i]);
     Serial.print(" ");
     Serial.print(correctnessDisplay[correctnessIndex]);
