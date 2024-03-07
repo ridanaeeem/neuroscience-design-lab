@@ -58,8 +58,7 @@ bool correctness[10] = {};
 // results
 unsigned long reactionTimes[10];
 
-// starting with the first position in the array
-int cueIndex = 0;
+// the current cue type
 int cueNumber = 0;
 
 // for printing purposes, enumerates correctness and cue types
@@ -160,9 +159,6 @@ void loop() {
 
             // what cue should be done at this trial
             cueNumber = cues[trialCount];
-            cueIndex++;
-            // Serial.println(numValid);
-            // Serial.println(numInvalid);
             if (cueNumber == 0) programState = validLeft;
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
@@ -182,7 +178,7 @@ void loop() {
           programState = prompt;
         }
 
-        if (endoExo[cueIndex] == 0){
+        if (endoExo[trialCount] == 0){
           // endogenous cue - cue is in the central visual field
           // keep cue on for the specified amount of time
           if (currentMillis - cueTurnOn <= cueLength){
@@ -225,7 +221,7 @@ void loop() {
           programState = prompt;
         }
 
-        if (endoExo[cueIndex] == 0){
+        if (endoExo[trialCount] == 0){
           // endogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(ledRightCue, HIGH);
@@ -261,7 +257,7 @@ void loop() {
           programState = prompt;
         }
 
-        if (endoExo[cueIndex] == 0){
+        if (endoExo[trialCount] == 0){
           // endogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(ledRightCue, HIGH);
@@ -297,7 +293,7 @@ void loop() {
           programState = prompt;
         }
 
-        if (endoExo[cueIndex] == 0){
+        if (endoExo[trialCount] == 0){
           // endogenous cue
           if (currentMillis - cueTurnOn <= cueLength){
             digitalWrite(ledLeftCue, HIGH);
@@ -343,8 +339,7 @@ void loop() {
           else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
-          Serial.println(cuesDisplay[cueNumber]);
-          Serial.println(reactionTime);
+          // Serial.println(reactionTime);
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           // add to array
@@ -363,8 +358,7 @@ void loop() {
           else if (cueNumber == 2) numInvalid--;
           // reaction time is the current time minus the time the light turned on
           reactionTime = millis() - lightOn;
-          Serial.println(cuesDisplay[cueNumber]);
-          Serial.println(reactionTime);
+          // Serial.println(reactionTime);
           // turn the light off
           digitalWrite(leftStimulus, LOW);
           // add to array
@@ -391,8 +385,7 @@ void loop() {
           if (cueNumber == 1) numValid--;
           else if (cueNumber == 3) numInvalid--;
           reactionTime = millis() - lightOn;
-          Serial.println(cuesDisplay[cueNumber]);
-          Serial.println(reactionTime);
+          // Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
@@ -406,8 +399,7 @@ void loop() {
           if (cueNumber == 1) numValid--;
           else if (cueNumber == 3) numInvalid--;
           reactionTime = millis() - lightOn;
-          Serial.println(cuesDisplay[cueNumber]);
-          Serial.println(reactionTime);
+          // Serial.println(reactionTime);
           digitalWrite(rightStimulus, LOW);
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
@@ -439,8 +431,7 @@ void displayResults(void){
     Serial.print(" ");
     Serial.print(cuesDisplay[cuesIndex]);
     Serial.print(" ");
-    Serial.print(endoExoDisplay[endoExoIndex]);
-    Serial.println(" ");
+    Serial.println(endoExoDisplay[endoExoIndex]);
     meanReactionTime += (reactionTimes[i] / nTrials);
   }
   Serial.print("\nAverage reaction time: ");
