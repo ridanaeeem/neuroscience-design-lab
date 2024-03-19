@@ -1,6 +1,7 @@
 typedef enum{
   programSetup,
   prompt,
+  switch,
   begin,
   validLeft,
   invalidLeft,
@@ -67,8 +68,8 @@ unsigned long reactionTimes[20];
 int cueNumber = 0;
 
 //what stimulus type we are working with
-bool visual = true;
-bool tactile = false;
+bool visual = false;
+bool tactile = true;
 
 // for printing purposes, enumerates correctness and cue types
 String correctnessDisplay[] = {"incorrect", "correct"};
@@ -91,10 +92,7 @@ void setup() {
   programState = programSetup;
   randomSeed(analogRead(0));
 
-  // digitalWrite(vibRightCue, HIGH);
-  // digitalWrite(vibLeftCue, HIGH);
-  // digitalWrite(vibLeftStimulus, HIGH);
-  // digitalWrite(vibRightStimulus, HIGH);
+  
 
   Serial.println(" ");
   Serial.println("In this experiment a light will flash and then an LED will turn on.");
@@ -165,6 +163,12 @@ void loop() {
         }
       break;
 
+      case switch:
+        Serial.println("We will now move on to the tactile phase of the experiment.")
+        Serial.println("Give the experimenter a minute to set this up, and then press a button when you are ready to begin.")
+        programState = begin;
+      break;
+
       // keeps track of when to turn the cue on
       case begin:
         // if enough time has elapsed between the last trial and right now, start a new one
@@ -182,7 +186,7 @@ void loop() {
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
             if (cueNumber == 3) programState = invalidRight;
-            // Serial.println(cuesDisplay[cueNumber]);
+            Serial.println(cuesDisplay[cueNumber]);
           }
         // if the user is holding down the button, go back and wait for them to let go
         } else {
@@ -253,7 +257,8 @@ void loop() {
             if (visual) digitalWrite(ledRightCue, HIGH);
             else if (tactile) digitalWrite(vibRightCue, HIGH);
           } else {
-            digitalWrite(ledRightCue, LOW);
+            if (visual) digitalWrite(ledRightCue, LOW);
+            else if (tactile) digitalWrite(vibRightCue, LOW);
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
               if (visual) digitalWrite(ledRightStimulus, HIGH);
@@ -341,7 +346,7 @@ void loop() {
             if (currentMillis - previousMillis >= stimulusDelay) {
               previousMillis = currentMillis;
               if (visual) digitalWrite(ledRightStimulus, HIGH);
-              else if (visual) digitalWrite(vibRightStimulus, HIGH);
+              else if (tactile) digitalWrite(vibRightStimulus, HIGH);
               stimOn = millis();
               programState = waitRightPress;
             }
@@ -391,14 +396,15 @@ void loop() {
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
           trialCount++;
+          programState = begin;
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
+          //   programState = switch;
           // }
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
-          programState = begin;
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (rightButtonState == 1){
@@ -415,14 +421,15 @@ void loop() {
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
           trialCount++;
+          programState = begin;
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
+          //   programState = switch;
           // }
           if (trialCount == nTrials) displayResults();
           // go back to beginning
           trialEnded = currentMillis;
-          programState = begin;
         }
       break;
 
@@ -446,13 +453,14 @@ void loop() {
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = true;
           trialCount++;
+          programState = begin;
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
+          //   programState = switch;
           // }
           if (trialCount == nTrials) displayResults();
           trialEnded = currentMillis;
-          programState = begin;
         }
         // reacted within an appropriate amount of time but pressed the wrong button
         if (leftButtonState == 1){
@@ -465,13 +473,14 @@ void loop() {
           reactionTimes[trialCount] = reactionTime;
           correctness[trialCount] = false;
           trialCount++;
+          programState = begin;
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
+          //   programState = switch;
           // }
           if (trialCount == nTrials) displayResults();
           trialEnded = currentMillis;
-          programState = begin;
         }
       break;
 
