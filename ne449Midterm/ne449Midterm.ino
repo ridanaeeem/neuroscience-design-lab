@@ -1,7 +1,7 @@
 typedef enum{
   programSetup,
   prompt,
-  switch,
+  switchState,
   begin,
   validLeft,
   invalidLeft,
@@ -54,15 +54,15 @@ int trialCount = 0;
 // make sure valid + invalid = nTrials 
 int numValid = 10;
 int numInvalid = 10;
-int nTrials = 20;
+const int nTrials = 20;
 // states what the cues should be (valid, invalid)
-int cues[20] = {};
+int cues[nTrials] = {};
 // states what the cues should be (endogenous 0, exogenous 1)
-int endoExo[20] = {};
+int endoExo[nTrials] = {};
 // whether or not they responded correctly
-bool correctness[20] = {};
+bool correctness[nTrials] = {};
 // results
-unsigned long reactionTimes[20];
+unsigned long reactionTimes[nTrials];
 
 // the current cue type
 int cueNumber = 0;
@@ -163,10 +163,10 @@ void loop() {
         }
       break;
 
-      case switch:
-        Serial.println("We will now move on to the tactile phase of the experiment.")
-        Serial.println("Give the experimenter a minute to set this up, and then press a button when you are ready to begin.")
-        programState = begin;
+      case switchState:
+        Serial.println("We will now move on to the tactile phase of the experiment.");
+        Serial.println("Give the experimenter a minute to set this up, and then press a button when you are ready to begin.");
+        programState = programSetup;
       break;
 
       // keeps track of when to turn the cue on
@@ -186,7 +186,7 @@ void loop() {
             if (cueNumber == 1) programState = validRight;
             if (cueNumber == 2) programState = invalidLeft;
             if (cueNumber == 3) programState = invalidRight;
-            Serial.println(cuesDisplay[cueNumber]);
+            // Serial.println(cuesDisplay[cueNumber]);
           }
         // if the user is holding down the button, go back and wait for them to let go
         } else {
@@ -400,7 +400,7 @@ void loop() {
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
-          //   programState = switch;
+          //   programState = switchState;
           // }
           if (trialCount == nTrials) displayResults();
           // go back to beginning
@@ -425,7 +425,7 @@ void loop() {
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
-          //   programState = switch;
+          //   programState = switchState;
           // }
           if (trialCount == nTrials) displayResults();
           // go back to beginning
@@ -457,7 +457,7 @@ void loop() {
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
-          //   programState = switch;
+          //   programState = switchState;
           // }
           if (trialCount == nTrials) displayResults();
           trialEnded = currentMillis;
@@ -477,7 +477,7 @@ void loop() {
           // if (trialCount == nTrials/2){
           //   visual = false;
           //   tactile = true;
-          //   programState = switch;
+          //   programState = switchState;
           // }
           if (trialCount == nTrials) displayResults();
           trialEnded = currentMillis;
